@@ -9,20 +9,13 @@ variants = [
     {"k": 8, "a": 4},
 ]
 
-
 fig, axes = plt.subplots(2, 4, figsize=(16, 8), subplot_kw={"projection": "polar"})
-
-
 fig.suptitle("Полярні графіки: r = a·cos(k·θ) та r = a·sin(k·θ)", fontsize=14)
-
-
 theta = np.linspace(0, 2 * np.pi, 1000)
-
 for i, v in enumerate(variants):
     k = v["k"]
     a = v["a"]
 
- 
     ax_top = axes[0][i]
     r_cos = a * np.cos(k * theta)
     ax_top.plot(theta, r_cos, color="black", linewidth=1)
