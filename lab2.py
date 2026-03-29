@@ -1,74 +1,47 @@
-import turtle
+import numpy as np
+import matplotlib.pyplot as plt
 
-NODES = [
-    (0,    0),
-    (1/3,  0),
-    (1/3,  1/3),
-    (2/3,  1/3),
-    (2/3,  0),
-    (2/3, -1/3),
-    (1,   -1/3),
-    (1,    0),
-]
 
-def draw_segment(t, x1, y1, x2, y2, depth, outward=1):
-    if depth == 0:
-        t.goto(x2, y2)
+def draw_rect(ax, x, y, w, h):
+    rect = plt.Rectangle((x, y), w, h, fill=False, edgecolor='black')
+    ax.add_patch(rect)
+
+
+def fractal(ax, x, y, size, depth):
+    draw_rect(ax, x, y, size, size)
+
+    if depth == 1:
         return
 
-    dx = x2 - x1
-    dy = y2 - y1
+    s = size / 3
+    offset = s * 0.1
 
-    def pt(u, v):
-        v = v * outward
-        return (x1 + u * dx - v * dy,
-                y1 + u * dy + v * dx)
+    # 🔴 ВСІ зміщення "вліво" відносно напрямку
 
-    pts = [pt(u, v) for u, v in NODES]
+    # ВЕРХ (йдемо вгору → вліво = x -)
+    fractal(ax, x - s, y + size + offset, size, depth - 1)
 
-    for i in range(len(pts) - 1):
-        draw_segment(t,
-                     pts[i][0], pts[i][1],
-                     pts[i+1][0], pts[i+1][1],
-                     depth - 1, outward)
+    # ПРАВО (йдемо вправо → вліво = y +)
+    fractal(ax, x + size + offset, y + s, size, depth - 1)
 
+    # НИЗ (йдемо вниз → вліво = x +)
+    fractal(ax, x + s, y - size - offset, size, depth - 1)
 
-def main():
-    screen = turtle.Screen()
-    screen.title("Фрактал: квадрат + ламана 1/3")
-    screen.bgcolor("white")
-    screen.setup(850, 850)
-    screen.tracer(0)
-
-    t = turtle.Turtle()
-    t.hideturtle()
-    t.pensize(1)
-    t.color("black")
-
-    try:
-        depth = int(input("Глибина рекурсії (0..4): "))
-    except ValueError:
-        depth = 3
-
-    size = 360
-    half = size / 2
-    sides = [
-        ((-half, -half), ( half, -half), +1), 
-        (( half, -half), ( half,  half), +1),  
-        (( half,  half), (-half,  half), +1),  
-        ((-half,  half), (-half, -half), +1),  
-    ]
-
-    t.penup()
-    t.goto(-half, -half)
-    t.pendown()
-
-    for (x1, y1), (x2, y2), out in sides:
-        draw_segment(t, x1, y1, x2, y2, depth, out)
-
-    screen.update()
-    screen.mainloop()
+    # ЛІВО (йдемо вліво → вліво = y -)
+    fractal(ax, x - size - offset, y - s, size, depth - 1)
 
 
-if __name__ == "__main__":
-    main()
+# ======================
+
+depth = int(input("Введи глибину: "))
+
+fig, ax = plt.subplots()
+ax.set_aspect('equal')
+
+fractal(ax, 0, 0, 1, depth)
+
+ax.set_xlim(-6, 6)
+ax.set_ylim(-6, 6)
+ax.axis('off')
+
+plt.show()
