@@ -1,36 +1,57 @@
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import numpy as np
-import matplotlib.pyplot as plt
-
 
 variants = [
-    {"k": 2, "a": 1},
-    {"k": 4, "a": 1},
-    {"k": 3, "a": 2},
-    {"k": 8, "a": 4},
+    {"k": 2, "a": 1}, {"k": 4, "a": 1},
+    {"k": 3, "a": 2}, {"k": 8, "a": 4},
 ]
 
-fig, axes = plt.subplots(2, 4, figsize=(16, 8), subplot_kw={"projection": "polar"})
-fig.suptitle("Полярні графіки: r = a·cos(k·θ) та r = a·sin(k·θ)", fontsize=14)
-theta = np.linspace(0, 2 * np.pi, 1000)
+fig = make_subplots(
+    rows=2, cols=4,
+    subplot_titles=[f"cos: k={v['k']}, a={v['a']}" for v in variants] +
+                   [f"sin: k={v['k']}, a={v['a']}" for v in variants],
+    specs=[[{'type': 'polar'}]*4, [{'type': 'polar'}]*4],
+    vertical_spacing=0.12
+)
+
+theta = np.linspace(0, 360, 1000)
+
 for i, v in enumerate(variants):
-    k = v["k"]
-    a = v["a"]
+    k, a = v["k"], v["a"]
+    rad_theta = np.radians(k * theta)
 
-    ax_top = axes[0][i]
-    r_cos = a * np.cos(k * theta)
-    ax_top.plot(theta, r_cos, color="black", linewidth=1)
-    ax_top.set_title(f"cos: k={k}, a={a}", pad=10)
-    ax_top.set_yticklabels([]) 
-    ax_top.set_xticklabels([])   
-    ax_top.grid(False)           
+    fig.add_trace(go.Scatterpolar(
+        r=a * np.cos(rad_theta),
+        theta=theta,
+        mode='lines',
+        line=dict(color='#1f77b4', width=2.5),
+        name=f"cos k={k}"
+    ), row=1, col=i+1)
 
-    ax_bot = axes[1][i]
-    r_sin = a * np.sin(k * theta)
-    ax_bot.plot(theta, r_sin, color="black", linewidth=1)
-    ax_bot.set_title(f"sin: k={k}, a={a}", pad=10)
-    ax_bot.set_yticklabels([])
-    ax_bot.set_xticklabels([])
-    ax_bot.grid(False)
+    fig.add_trace(go.Scatterpolar(
+        r=a * np.sin(rad_theta),
+        theta=theta,
+        mode='lines',
+        line=dict(color='#ff7f0e', width=2.5),
+        name=f"sin k={k}"
+    ), row=2, col=i+1)
 
-plt.tight_layout()
-plt.show()
+fig.update_layout(
+    title=dict(
+        text="Аналіз полярних функцій: Rose Curves",
+        x=0.5,
+        font=dict(size=20)
+    ),
+    showlegend=False,
+    height=850,
+    width=1200,
+    template="plotly_white"
+)
+
+fig.update_polars(
+    radialaxis=dict(showticklabels=False, ticks=""),
+    angularaxis=dict(showticklabels=True, ticks="outside", rotation=90, direction="counterclockwise")
+)
+
+fig.show()

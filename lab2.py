@@ -2,46 +2,72 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def draw_rect(ax, x, y, w, h):
-    rect = plt.Rectangle((x, y), w, h, fill=False, edgecolor='black')
-    ax.add_patch(rect)
+def get_fractal_step(p1, p2, depth):
+    # Глибина 1: просто сторона квадрата
+    if depth <= 1:
+        return [p1, p2]
+
+    # Вектори для розрахунку (u - вздовж сторони, n - перпендикуляр)
+    v = p2 - p1
+    u = v / 3.0
+    # Нормаль (поворот на 90 градусів)
+    n = np.array([-u[1], u[0]])
+
+    # ТВОЯ СХЕМА (7 точок на кожну сторону):
+    # 1. Піднімаємося вгору назовні
+    # 2. Проходимо 1/3 паралельно
+    # 3. Спускаємося вниз (перетинаємо основну лінію)
+    # 4. Проходимо 1/3 паралельно всередині
+    # 5. Повертаємося на фінішну точку
+
+    p_a = p1 + n  # Вгору від старту
+    p_b = p_a + u  # Вперед вгорі
+    p_c = p_b - n  # Спуск на основну лінію (1/3 шляху)
+    p_d = p_c - n  # Спуск ще нижче (всередину)
+    p_e = p_d + u  # Вперед внизу
+    p_f = p_e + n  # Повернення на лінію (2/3 шляху)
+    # p2 — фініш (3/3 шляху)
+
+    if depth > 2:
+        # Для вищих рівнів рекурсії ділимо кожен відрізок далі
+        segments = [(p1, p_a), (p_a, p_b), (p_b, p_c), (p_c, p_d), (p_d, p_e), (p_e, p_f), (p_f, p2)]
+        points = []
+        for s_start, s_end in segments:
+            points.extend(get_fractal_step(s_start, s_end, depth - 1)[:-1])
+        points.append(p2)
+        return points
+    else:
+        return [p1, p_a, p_b, p_c, p_d, p_e, p_f, p2]
 
 
-def fractal(ax, x, y, size, depth):
-    draw_rect(ax, x, y, size, size)
+def main():
+    try:
+        depth = int(input("Введіть глибину (1 - квадрат, 2 - твоя схема): "))
+    except:
+        depth = 1
 
-    if depth == 1:
-        return
+    # Початковий квадрат (чисті координати)
+    size = 300
+    pts = [np.array([0, size]), np.array([size, size]), np.array([size, 0]), np.array([0, 0])]
 
-    s = size / 3
-    offset = s * 0.1
+    final_points = []
+    for i in range(4):
+        p_start = pts[i]
+        p_end = pts[(i + 1) % 4]
+        res = get_fractal_step(p_start, p_end, depth)
+        final_points.extend(res[:-1])
 
-    # 🔴 ВСІ зміщення "вліво" відносно напрямку
+    final_points.append(final_points[0])  # Точне замикання
+    data = np.array(final_points)
 
-    # ВЕРХ (йдемо вгору → вліво = x -)
-    fractal(ax, x - s, y + size + offset, size, depth - 1)
-
-    # ПРАВО (йдемо вправо → вліво = y +)
-    fractal(ax, x + size + offset, y + s, size, depth - 1)
-
-    # НИЗ (йдемо вниз → вліво = x +)
-    fractal(ax, x + s, y - size - offset, size, depth - 1)
-
-    # ЛІВО (йдемо вліво → вліво = y -)
-    fractal(ax, x - size - offset, y - s, size, depth - 1)
+    plt.figure(figsize=(8, 8))
+    plt.plot(data[:, 0], data[:, 1], 'k-', lw=2)  # Чорна чітка лінія
+    plt.fill(data[:, 0], data[:, 1], 'cyan', alpha=0.1)
+    plt.axis('equal')
+    plt.grid(True, linestyle=':', alpha=0.5)
+    plt.title(f"Твоя схема (Глибина {depth})")
+    plt.show()
 
 
-# ======================
-
-depth = int(input("Введи глибину: "))
-
-fig, ax = plt.subplots()
-ax.set_aspect('equal')
-
-fractal(ax, 0, 0, 1, depth)
-
-ax.set_xlim(-6, 6)
-ax.set_ylim(-6, 6)
-ax.axis('off')
-
-plt.show()
+if __name__ == "__main__":
+    main()
